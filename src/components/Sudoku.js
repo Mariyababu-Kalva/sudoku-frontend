@@ -165,13 +165,15 @@ const Sudoku = () => {
 
   const getInputClassName = (rowIndex, colIndex) => {
     const isInvalid = invalidCells.has(`${rowIndex}-${colIndex}`);
-    return `w-12 h-12 text-center text-lg font-bold border ${isInvalid ? 'border-red-500' : 'border-gray-400'} ${
-      isInvalid && blinkInvalid ? 'text-red-500' : ''
-    } ${isOriginalCell(rowIndex, colIndex) ? 'bg-gray-100' : 'bg-white'}`;
+    return `w-12 h-12 text-center text-lg font-bold border ${
+      isInvalid ? 'border-red-500' : 'border-gray-400'
+    } ${isInvalid && blinkInvalid ? 'text-red-500' : ''} ${
+      isOriginalCell(rowIndex, colIndex) ? 'bg-gray-100' : 'bg-white'
+    }`;
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-6">
+    <div className="flex flex-col items-center justify-center min-h-screen p-6" style={{ alignItems: 'center', justifyContent: 'center' }}>
       <h1 className="text-2xl font-bold mb-4">Sudoku</h1>
       <RadioGroup
         row

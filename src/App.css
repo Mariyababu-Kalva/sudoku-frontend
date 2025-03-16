@@ -36,3 +36,14 @@
     transform: rotate(360deg);
   }
 }
+
+html, body, #root, .app-container { /* Assuming you add class 'app-container' to the div in App.js */
+  height: 100%;
+  margin: 0;
+}
+
+.app-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
