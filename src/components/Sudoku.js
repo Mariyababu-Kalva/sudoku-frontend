@@ -94,7 +94,19 @@ const Sudoku = () => {
       const newInvalidCells = new Set(invalidCells);
       newInvalidCells.delete(cellId);
       setInvalidCells(newInvalidCells);
-      setHasInvalidMove(newInvalidCells.size > 0);
+
+      // Re-evaluate if there are any invalid moves on the entire board
+      let hasAnyInvalidMove = false;
+      for (let i = 0; i < 9; i++) {
+        for (let j = 0; j < 9; j++) {
+          if (board[i][j] !== 0 && !isValidMove(i, j, board[i][j], board)) {
+            hasAnyInvalidMove = true;
+            break;
+          }
+        }
+        if (hasAnyInvalidMove) break;
+      }
+      setHasInvalidMove(hasAnyInvalidMove);
     }
 
     setHistory([...history, { row, col, prevValue: board[row][col] }]);
@@ -146,20 +158,22 @@ const Sudoku = () => {
 
   const getCellStyle = (rowIndex, colIndex) => {
     const isInvalid = invalidCells.has(`${rowIndex}-${colIndex}`);
+    const baseBorder = '1px solid black';
+    const thickBorder = '3px solid black';
+
     return {
       textAlign: "center",
       width: "40px",
       height: "40px",
       fontSize: "20px",
       fontWeight: isOriginalCell(rowIndex, colIndex) ? 'bold' : 'normal',
-      borderTop: rowIndex % 3 === 0 ? "3px solid black" : "1px solid black",
-      borderLeft: colIndex % 3 === 0 ? "3px solid black" : "1px solid black",
-      borderRight: colIndex === 8 ? "3px solid black" : "1px solid black",
-      borderBottom: rowIndex === 8 ? "3px solid black" : "1px solid black",
-      borderColor: isInvalid ? 'red' : 'black',
-      borderWidth: isInvalid ? '4px' : '1px',
+      borderTop: rowIndex % 3 === 0 ? thickBorder : baseBorder,
+      borderLeft: colIndex % 3 === 0 ? thickBorder : baseBorder,
+      borderRight: colIndex === 8 ? thickBorder : baseBorder,
+      borderBottom: rowIndex === 8 ? thickBorder : baseBorder,
+      // Removed borderColor and borderWidth for invalid cells from here
       color: isInvalid ? 'red' : 'inherit',
-      backgroundColor: isOriginalCell(rowIndex, colIndex) ? 'bg-gray-100' : 'white',
+      backgroundColor: isInvalid ? 'rgba(255, 0, 0, 0.1)' : isOriginalCell(rowIndex, colIndex) ? 'bg-gray-100' : 'white',
     };
   };
 
@@ -173,7 +187,7 @@ const Sudoku = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-6" style={{ alignItems: 'center', justifyContent: 'center' }}>
+    <div className="flex flex-col items-center justify-center min-h-screen p-6">
       <h1 className="text-2xl font-bold mb-4">Sudoku</h1>
       <RadioGroup
         row
