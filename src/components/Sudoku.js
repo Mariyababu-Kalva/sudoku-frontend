@@ -223,13 +223,16 @@ const Sudoku = () => {
           ))}
         </div>
       )}
+      <br></br>
       <div className="mt-4 flex w-full max-w-md">
         <Button className="flex-grow mr-2" variant="contained" color="primary" onClick={generatePuzzle}>
           New Puzzle
         </Button>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
         <Button className="flex-grow mx-2" variant="contained" color="success" onClick={solveSudoku}>
           Solve
         </Button>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
         <Button className="flex-grow ml-2" variant="contained" color="warning" onClick={undoMove} disabled={history.length === 0}>
           Undo
         </Button>
