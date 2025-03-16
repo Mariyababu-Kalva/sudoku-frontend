@@ -13,13 +13,12 @@ const Sudoku = () => {
   const [hasInvalidMove, setHasInvalidMove] = useState(false);
   const [blinkInvalid, setBlinkInvalid] = useState(false);
   const [loading, setLoading] = useState(true);
+  const backendURL = "http://127.0.0.1:5000"; // Replace if your backend is hosted elsewhere
 
   const generatePuzzle = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await axios.get(
-        `http://127.0.0.1:5000/generate?difficulty=${difficulty}`
-      );
+      const response = await axios.get(`${backendURL}/generate?difficulty=${difficulty}`);
       setBoard(response.data.board);
       setOriginalBoard(response.data.board);
       setInvalidCells(new Set());
@@ -27,10 +26,11 @@ const Sudoku = () => {
       setHasInvalidMove(false);
     } catch (error) {
       console.error("Error generating puzzle:", error);
+      // Optionally handle error display to the user
     } finally {
       setLoading(false);
     }
-  }, [difficulty]);
+  }, [difficulty, backendURL]);
 
   useEffect(() => {
     generatePuzzle();
@@ -44,7 +44,7 @@ const Sudoku = () => {
       setBlinkInvalid(true);
       return () => clearTimeout(timer);
     } else {
-      setBlinkInvalid(false); // Ensure blinking stops when no invalid move
+      setBlinkInvalid(false);
     }
   }, [hasInvalidMove]);
 
@@ -130,6 +130,20 @@ const Sudoku = () => {
     }
   };
 
+  const solveSudoku = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.post(`${backendURL}/solve`, { board });
+      setBoard(response.data.solution);
+      // Optionally disable input after solving
+    } catch (error) {
+      console.error("Error solving Sudoku:", error);
+      // Optionally handle error display to the user (e.g., "No solution found")
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const getCellStyle = (rowIndex, colIndex) => {
     const isInvalid = invalidCells.has(`${rowIndex}-${colIndex}`);
     return {
@@ -208,7 +222,7 @@ const Sudoku = () => {
         <Button
           variant="contained"
           color="success"
-          onClick={() => alert("Solve logic to be implemented!")}
+          onClick={solveSudoku}
         >
           Solve
         </Button>
