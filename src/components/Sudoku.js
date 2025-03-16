@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Button, FormControlLabel, Radio, RadioGroup } from "@mui/material";
 import axios from "axios";
 
@@ -14,21 +14,7 @@ const Sudoku = () => {
   const [blinkInvalid, setBlinkInvalid] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    generatePuzzle();
-  }, [difficulty]);
-
-  useEffect(() => {
-    if (hasInvalidMove) {
-      const timer = setTimeout(() => {
-        setBlinkInvalid(false);
-      }, 500);
-      setBlinkInvalid(true);
-      return () => clearTimeout(timer);
-    }
-  }, [hasInvalidMove]);
-
-  const generatePuzzle = async () => {
+  const generatePuzzle = useCallback(async () => {
     setLoading(true);
     try {
       const response = await axios.get(
@@ -44,7 +30,23 @@ const Sudoku = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [difficulty]);
+
+  useEffect(() => {
+    generatePuzzle();
+  }, [difficulty, generatePuzzle]);
+
+  useEffect(() => {
+    if (hasInvalidMove) {
+      const timer = setTimeout(() => {
+        setBlinkInvalid(false);
+      }, 500);
+      setBlinkInvalid(true);
+      return () => clearTimeout(timer);
+    } else {
+      setBlinkInvalid(false); // Ensure blinking stops when no invalid move
+    }
+  }, [hasInvalidMove]);
 
   const isValidMove = (row, col, value, currentBoard) => {
     if (value === 0) return true;
@@ -128,6 +130,32 @@ const Sudoku = () => {
     }
   };
 
+  const getCellStyle = (rowIndex, colIndex) => {
+    const isInvalid = invalidCells.has(`${rowIndex}-${colIndex}`);
+    return {
+      textAlign: "center",
+      width: "40px",
+      height: "40px",
+      fontSize: "20px",
+      fontWeight: isOriginalCell(rowIndex, colIndex) ? 'bold' : 'normal',
+      borderTop: rowIndex % 3 === 0 ? "3px solid black" : "1px solid black",
+      borderLeft: colIndex % 3 === 0 ? "3px solid black" : "1px solid black",
+      borderRight: colIndex === 8 ? "3px solid black" : "1px solid black",
+      borderBottom: rowIndex === 8 ? "3px solid black" : "1px solid black",
+      borderColor: isInvalid ? 'red' : 'black',
+      borderWidth: isInvalid ? '4px' : '1px',
+      color: isInvalid ? 'red' : 'inherit',
+      backgroundColor: isOriginalCell(rowIndex, colIndex) ? 'bg-gray-100' : 'white',
+    };
+  };
+
+  const getInputClassName = (rowIndex, colIndex) => {
+    const isInvalid = invalidCells.has(`${rowIndex}-${colIndex}`);
+    return `w-12 h-12 text-center text-lg font-bold border ${isInvalid ? 'border-red-500' : 'border-gray-400'} ${
+      isInvalid && blinkInvalid ? 'text-red-500' : ''
+    } ${isOriginalCell(rowIndex, colIndex) ? 'bg-gray-100' : 'bg-white'}`;
+  };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-6">
       <h1 className="text-2xl font-bold mb-4">Sudoku</h1>
@@ -156,26 +184,8 @@ const Sudoku = () => {
                   value={cell === 0 ? "" : cell}
                   onChange={(e) => handleChange(rowIndex, colIndex, e.target.value)}
                   onFocus={() => handleFocus(rowIndex, colIndex)}
-                  className={`w-12 h-12 text-center text-lg font-bold border border-gray-400 ${
-                    invalidCells.has(`${rowIndex}-${colIndex}`)
-                      ? `border-4 border-red-500 ${
-                          blinkInvalid ? 'text-red-500' : ''
-                        }`
-                      : isOriginalCell(rowIndex, colIndex)
-                      ? 'bg-gray-100'
-                      : 'bg-white'
-                  }`}
-                  style={{
-                    textAlign: "center",
-                    width: "40px",
-                    height: "40px",
-                    fontSize: "20px",
-                    fontWeight: isOriginalCell(rowIndex, colIndex) ? 'bold' : 'normal',
-                    borderTop: rowIndex % 3 === 0 ? "3px solid black" : "1px solid black",
-                    borderLeft: colIndex % 3 === 0 ? "3px solid black" : "1px solid black",
-                    borderRight: colIndex === 8 ? "3px solid black" : "1px solid black",
-                    borderBottom: rowIndex === 8 ? "3px solid black" : "1px solid black",
-                  }}
+                  className={getInputClassName(rowIndex, colIndex)}
+                  style={getCellStyle(rowIndex, colIndex)}
                   readOnly={isOriginalCell(rowIndex, colIndex)}
                 />
               ))}
@@ -206,3 +216,5 @@ const Sudoku = () => {
     </div>
   );
 };
+
+export default Sudoku;
