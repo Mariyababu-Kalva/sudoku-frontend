@@ -14,6 +14,7 @@ const Sudoku = () => {
   const [blinkInvalid, setBlinkInvalid] = useState(false);
   const [loading, setLoading] = useState(true);
   const backendURL = "http://127.0.0.1:5000"; // Replace if your backend is hosted elsewhere
+  const [completedSubgrids, setCompletedSubgrids] = useState(new Set());
 
   const generatePuzzle = useCallback(async () => {
     setLoading(true);
@@ -24,6 +25,7 @@ const Sudoku = () => {
       setInvalidCells(new Set());
       setHistory([]);
       setHasInvalidMove(false);
+      setCompletedSubgrids(new Set()); // Reset completed subgrids on new puzzle
     } catch (error) {
       console.error("Error generating puzzle:", error);
       // Optionally handle error display to the user
@@ -47,6 +49,34 @@ const Sudoku = () => {
       setBlinkInvalid(false);
     }
   }, [hasInvalidMove]);
+
+  const isSubgridComplete = (board, startRow, startCol) => {
+    const subgridValues = new Set();
+    for (let i = 0; i < 3; i++) {
+      for (let j = 0; j < 3; j++) {
+        const value = board[startRow + i][startCol + j];
+        if (value === 0 || subgridValues.has(value)) {
+          return false;
+        }
+        subgridValues.add(value);
+      }
+    }
+    return true;
+  };
+
+  useEffect(() => {
+    const newCompletedSubgrids = new Set();
+    for (let i = 0; i < 3; i++) {
+      for (let j = 0; j < 3; j++) {
+        const startRow = i * 3;
+        const startCol = j * 3;
+        if (isSubgridComplete(board, startRow, startCol)) {
+          newCompletedSubgrids.add(`${startRow}-${startCol}`);
+        }
+      }
+    }
+    setCompletedSubgrids(newCompletedSubgrids);
+  }, [board]);
 
   const isValidMove = (row, col, value, currentBoard) => {
     if (value === 0) return true;
@@ -160,6 +190,9 @@ const Sudoku = () => {
     const isInvalid = invalidCells.has(`${rowIndex}-${colIndex}`);
     const baseBorder = '1px solid black';
     const thickBorder = '3px solid black';
+    const subgridStartRow = Math.floor(rowIndex / 3) * 3;
+    const subgridStartCol = Math.floor(colIndex / 3) * 3;
+    const isSubgridCompleted = completedSubgrids.has(`${subgridStartRow}-${subgridStartCol}`);
 
     return {
       textAlign: "center",
@@ -171,9 +204,14 @@ const Sudoku = () => {
       borderLeft: colIndex % 3 === 0 ? thickBorder : baseBorder,
       borderRight: colIndex === 8 ? thickBorder : baseBorder,
       borderBottom: rowIndex === 8 ? thickBorder : baseBorder,
-      // Removed borderColor and borderWidth for invalid cells from here
       color: isInvalid ? 'red' : 'inherit',
-      backgroundColor: isInvalid ? 'rgba(255, 0, 0, 0.1)' : isOriginalCell(rowIndex, colIndex) ? 'bg-gray-100' : 'white',
+      backgroundColor: isInvalid
+        ? 'rgba(255, 0, 0, 0.1)'
+        : isSubgridCompleted
+        ? 'lightblue'
+        : isOriginalCell(rowIndex, colIndex)
+        ? 'bg-gray-100'
+        : 'white',
     };
   };
 
